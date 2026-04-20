@@ -9,6 +9,9 @@ const Classroom = require('./models/Classroom');
 const Group = require('./models/Group');
 const Schedule = require('./models/Schedule');
 const ScheduleVersion = require('./models/ScheduleVersion');
+const BlockedSlot = require('./models/BlockedSlot');
+const TeacherConstraint = require('./models/TeacherConstraint');
+const Curriculum = require('./models/Curriculum');
 
 Schedule.belongsTo(ScheduleVersion);
 ScheduleVersion.hasMany(Schedule, { onDelete: 'CASCADE' });
@@ -30,6 +33,18 @@ Classroom.hasMany(Schedule);
 Schedule.belongsTo(User, { as: 'Teacher', foreignKey: 'TeacherId' });
 User.hasMany(Schedule, { foreignKey: 'TeacherId' });
 
+User.hasMany(TeacherConstraint, { foreignKey: 'TeacherId' });
+TeacherConstraint.belongsTo(User, { foreignKey: 'TeacherId', as: 'Teacher' });
+
+Curriculum.belongsTo(Group);
+Group.hasMany(Curriculum);
+
+Curriculum.belongsTo(Subject);
+Subject.hasMany(Curriculum);
+
+// Також можемо прив'язати рекомендованого викладача (опціонально)
+Curriculum.belongsTo(User, { as: 'RecommendedTeacher', foreignKey: 'TeacherId' });
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -39,6 +54,9 @@ const classroomRoutes = require('./routes/classroomRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const versionRoutes = require('./routes/versionRoutes');
+const blockSlotRoutes = require('./routes/blockedSlotRoutes');
+const teacherConstraintRoutes = require('./routes/teacherConstraintRoutes');
+const curriculumRoutes = require('./routes/curriculumRoutes');
 
 app.use(cors());
 app.use(express.json());
@@ -49,6 +67,9 @@ app.use('/api/classrooms', classroomRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/versions', versionRoutes);
+app.use('/api/blocked-slots', blockSlotRoutes);
+app.use('/api/teacher-constraints', teacherConstraintRoutes);
+app.use('/api/curriculum', curriculumRoutes);
 
 connectDB();
 

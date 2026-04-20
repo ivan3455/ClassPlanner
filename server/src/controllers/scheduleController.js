@@ -5,6 +5,7 @@ const Classroom = require('../models/Classroom');
 const User = require('../models/User');
 
 const scheduleService = require('../services/scheduleService'); // Імпортуємо сервіс
+const exportService = require('../services/exportService');
 
 exports.createScheduleEntry = async (req, res) => {
   try {
@@ -84,5 +85,26 @@ exports.updateScheduleEntry = async (req, res) => {
     res.json({ message: 'Запис успішно оновлено', entry });
   } catch (error) {
     res.status(500).json({ message: 'Помилка при оновленні запису', error: error.message });
+  }
+};
+
+exports.downloadExcel = async (req, res) => {
+  try {
+    const { versionId } = req.params;
+    const workbook = await exportService.exportToExcel(versionId);
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=' + `Schedule_${versionId}.xlsx`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    res.status(500).json({ message: "Помилка експорту", error: error.message });
   }
 };
