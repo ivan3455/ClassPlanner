@@ -1,72 +1,108 @@
-const Schedule = require('../models/Schedule');
-const BlockedSlot = require('../models/BlockedSlot');
-const TeacherConstraint = require('../models/TeacherConstraint');
+const { Schedule, BlockedSlot, TeacherConstraint, Group } = require('../models');
 const { Op } = require('sequelize');
 
-exports.checkConflicts = async (data) => {
-  const { dayOfWeek, timeSlot, ClassroomId, TeacherId, GroupId } = data;
+/**
+ * Validates schedule parameters against hard constraints (overlapping time slots, teacher availability, institutional blocks).
+ */
+const checkConflicts = async (data, currentEntryId = null) => {
+  const { dayOfWeek, timeSlot, ClassroomId, TeacherId, GroupId, ScheduleVersionId, date } = data;
 
-  // 1. ПЕРЕВІРКА ГЛОБАЛЬНИХ БЛОКУВАНЬ (Свята / Вихідні)
+  if (!ScheduleVersionId) {
+    throw new Error('System error: ScheduleVersionId contextual binding is required for conflict validation routines.');
+  }
+
+  const targetId = currentEntryId || data.id;
+
+  // 1. STRUCTURAL LAYER VERIFICATION
   const isBlocked = await BlockedSlot.findOne({
     where: {
+      ScheduleVersionId,
       [Op.or]: [
-        { dayOfWeek, timeSlot: null }, // Заблоковано весь день
-        { dayOfWeek, timeSlot },       // Заблоковано конкретний слот
+        { dayOfWeek: dayOfWeek },
+        ...(date ? [{ specificDate: date }] : [])
       ]
     }
   });
 
   if (isBlocked) {
-    return `Цей час заблоковано: ${isBlocked.reason || 'Технічна перерва'}`;
+    return `Time slot unavailable: ${isBlocked.reason || 'Technical operational hold active.'}`;
   }
 
-  // 2. ПЕРЕВІРКА ГРАФІКА ВИКЛАДАЧА (Суворий режим)
-  // Шукаємо ВСІ обмеження цього викладача
-  const allTeacherConstraints = await TeacherConstraint.findAll({ 
-    where: { TeacherId } 
-  });
+  // 2. VARIABLE OPERATIONAL CONSTRAINTS: Teacher availability windows
+  // ФІКС ОКОЛОМАТЕМАТИЧНОГО ПЕРЕТИНУ ІНТЕРВАЛІВ (Часткове накладання типу 09:00 - 10:00)
+  if (TeacherId && timeSlot && timeSlot.includes('-')) {
+    const [slotStart, slotEnd] = timeSlot.split('-').map(t => t.trim());
 
-  // Якщо у викладача внесено хоча б одне обмеження, він може працювати ТІЛЬКИ там, де дозволено
-  if (allTeacherConstraints.length > 0) {
-    // Шукаємо дозволені вікна саме на цей день тижня
-    const dayConstraints = allTeacherConstraints.filter(c => c.dayOfWeek === dayOfWeek);
-
-    // Якщо на цей день немає жодного запису — викладач вихідний
-    if (dayConstraints.length === 0) {
-      return "Викладач не працює у цей день тижня.";
-    }
-
-    const lessonStart = timeSlot.split(' - ')[0]; // Витягуємо "08:30" з "08:30 - 10:00"
-    
-    // Перевіряємо, чи входить час початку пари в будь-яке з дозволених вікон
-    const isAvailable = dayConstraints.some(c => {
-      // Порівняння рядків часу (напр. "08:30" >= "08:00" && "08:30" < "13:00")
-      return lessonStart >= c.startTime && lessonStart < c.endTime;
+    // Формула перетину: (Обмеження.Початок < Пара.Кінець) ТА (Обмеження.Кінець > Пара.Початок)
+    const teacherConstraint = await TeacherConstraint.findOne({
+      where: {
+        TeacherId,
+        dayOfWeek,
+        startTime: { [Op.lt]: slotEnd },
+        endTime: { [Op.gt]: slotStart }
+      }
     });
 
-    if (!isAvailable) {
-      return "Викладач не працює в цей час згідно з графіком.";
+    if (teacherConstraint) {
+      return `The assigned teacher has a scheduling window conflict or explicit preferred block during slot "${timeSlot}" (Blocked: ${teacherConstraint.startTime} - ${teacherConstraint.endTime}).`;
     }
   }
 
-  // 3. ПЕРЕВІРКА ФІЗИЧНИХ КОНФЛІКТІВ (Чи не зайняті об'єкти іншими парами)
+  // 3. PHYSICAL ALLOCATION LAYER: Resource overlapping checks
+  const targetGroup = await Group.findOne({ where: { id: GroupId } });
+  if (!targetGroup) {
+    return 'Target academic student group context not found.';
+  }
+
+  const relatedGroupIds = [GroupId];
+  if (targetGroup.parentGroupId) {
+    relatedGroupIds.push(targetGroup.parentGroupId);
+  }
+  
+  const subGroups = await Group.findAll({ where: { parentGroupId: GroupId }, attributes: ['id'] });
+  if (subGroups.length > 0) {
+    subGroups.forEach(sg => relatedGroupIds.push(sg.id));
+  }
+
+  const conflictFilter = {
+    dayOfWeek,
+    timeSlot: timeSlot.trim(),
+    ScheduleVersionId,
+    [Op.or]: [
+      { ClassroomId },
+      { TeacherId },
+      { GroupId: { [Op.in]: relatedGroupIds } } 
+    ]
+  };
+
+  if (targetId) {
+    conflictFilter.id = { [Op.ne]: targetId };
+  }
+
   const conflict = await Schedule.findOne({
-    where: {
-      dayOfWeek,
-      timeSlot,
-      [Op.or]: [
-        { ClassroomId },
-        { TeacherId },
-        { GroupId }
-      ]
-    }
+    where: conflictFilter,
+    include: [{ model: Group, attributes: ['id', 'name', 'parentGroupId'] }]
   });
 
   if (conflict) {
-    if (conflict.ClassroomId === ClassroomId) return "Ця аудиторія вже зайнята.";
-    if (conflict.TeacherId === TeacherId) return "Викладач зайнятий.";
-    if (conflict.GroupId === GroupId) return "У групи вже є пара.";
+    if (conflict.ClassroomId === ClassroomId) {
+      return `The targeted classroom/cabinet is already fully occupied during slot "${timeSlot}".`;
+    }
+    if (conflict.TeacherId === TeacherId) {
+      return `The assigned teacher is already occupied with another academic class during slot "${timeSlot}".`;
+    }
+    if (relatedGroupIds.includes(conflict.GroupId)) {
+      if (conflict.GroupId === GroupId) {
+        return `The designated student group is already assigned to a parallel lesson instance during slot "${timeSlot}".`;
+      } else {
+        return `Conflict via structural division: An overlapping lesson exists for a connected sub-branch or parent class (${conflict.Group ? conflict.Group.name : 'Subgroup'}) during slot "${timeSlot}".`;
+      }
+    }
   }
 
-  return null;
+  return null; 
+};
+
+module.exports = {
+  checkConflicts
 };

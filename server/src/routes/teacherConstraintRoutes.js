@@ -4,7 +4,13 @@ const teacherConstraintController = require('../controllers/teacherConstraintCon
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
-// Має бути '/' (бо префікс /api/teacher-constraints ми даємо в index.js)
-router.post('/', authMiddleware, roleMiddleware(['Admin', 'Methodist']), teacherConstraintController.setConstraint);
+// Secure all teacher constraint operations under global authentication
+router.use(authMiddleware);
+
+// ФІКС ДОСТУПУ: Дозволяємо і методисту, і самому викладачу робити мутації (створювати/видаляти обмеження)
+router.post('/', roleMiddleware(['Methodist', 'Teacher']), teacherConstraintController.setTeacherConstraints);
+
+// Query endpoint (Accessible by Methodist to configure, and Teachers to review their schedule)
+router.get('/', roleMiddleware(['Methodist', 'Teacher']), teacherConstraintController.getTeacherConstraints);
 
 module.exports = router;

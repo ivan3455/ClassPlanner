@@ -3,30 +3,19 @@ const router = express.Router();
 const scheduleController = require('../controllers/scheduleController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
-const generatorController = require('../controllers/generatorController')
 
-router.post('/', 
-  authMiddleware, 
-  roleMiddleware(['Admin', 'Methodist']), 
-  scheduleController.createScheduleEntry
-);
+// Enforce authentication for all schedule operations
+router.use(authMiddleware);
 
-router.get('/', authMiddleware, scheduleController.getFullSchedule);
+// Read-only endpoints (Accessible by both Methodist and Teachers)
+router.get('/view/:versionId', roleMiddleware(['Methodist', 'Teacher']), scheduleController.getScheduleView);
 
-router.patch('/:id/replace-teacher', 
-  authMiddleware, 
-  roleMiddleware(['Admin', 'Methodist']), 
-  scheduleController.replaceTeacher
-);
+// Mutation and configuration endpoints (Restricted to Methodist only)
+router.post('/', roleMiddleware(['Methodist']), scheduleController.createScheduleEntry);
+router.put('/:id', roleMiddleware(['Methodist']), scheduleController.updateScheduleEntry);
+router.put('/:id/replace-teacher', roleMiddleware(['Methodist']), scheduleController.replaceTeacher);
+router.delete('/clear/:versionId', roleMiddleware(['Methodist']), scheduleController.clearVersionSchedule);
 
-router.patch('/:id', 
-  authMiddleware, 
-  roleMiddleware(['Admin', 'Methodist']), 
-  scheduleController.updateScheduleEntry
-);
-
-router.post('/auto-generate', authMiddleware, roleMiddleware(['Admin']), generatorController.generate);
-
-router.get('/export/excel/:versionId', authMiddleware, scheduleController.downloadExcel);
+router.get('/export/excel', roleMiddleware(['Methodist']), scheduleController.downloadExcel);
 
 module.exports = router;

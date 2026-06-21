@@ -9,19 +9,32 @@ const BlockedSlot = sequelize.define('BlockedSlot', {
   },
   dayOfWeek: {
     type: DataTypes.ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-    allowNull: true, // Можна заблокувати конкретний день тижня назавжди
+    allowNull: true, // If provided, locks this specific day of the week cyclically
   },
   specificDate: {
     type: DataTypes.DATEONLY,
-    allowNull: true, // Або конкретну дату (наприклад, 2026-08-24)
+    allowNull: true, // If provided, locks a specific calendar date (e.g., national holidays)
   },
   timeSlot: {
     type: DataTypes.STRING, 
-    allowNull: true, // Якщо null — блокується весь день
+    allowNull: true, // If null, the entire day is considered blocked
   },
   reason: {
-    type: DataTypes.STRING, // Причина: "Свято", "Технічні роботи"
+    type: DataTypes.STRING, // e.g., "National Holiday", "Methodist Maintenance", "Sanitary Day"
     allowNull: true,
+  }
+}, {
+  timestamps: true,
+  // Model-wide validations to protect data integrity
+  validate: {
+    exclusivityCheck() {
+      if (!this.dayOfWeek && !this.specificDate) {
+        throw new Error('Either dayOfWeek or specificDate must be provided.');
+      }
+      if (this.dayOfWeek && this.specificDate) {
+        throw new Error('Cannot provide both dayOfWeek and specificDate. Choose one.');
+      }
+    }
   }
 });
 

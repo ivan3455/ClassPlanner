@@ -1,25 +1,30 @@
 const jwt = require('jsonwebtoken');
 
-module.exports = function (req, res, next) {
-  // 1. Отримуємо токен із заголовка Authorization (формат "Bearer TOKEN")
+const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  
-  if (!authHeader) {
-    return res.status(401).json({ message: 'Користувач не авторизований (відсутній токен)' });
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Access denied. No token provided.' });
   }
 
-  const token = authHeader.split(' ')[1]; // Беремо частину після "Bearer"
+  const token = authHeader.split(' ')[1];
 
   try {
-    // 2. Декодуємо токен за допомогою нашого секретного ключа
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // 3. Додаємо дані користувача в об'єкт запиту (req.user), щоб контролери могли їх бачити
+    // Injects userId, role, and institutionId directly into the request object
     req.user = decoded;
-    
-    // 4. Передаємо керування наступній функції
+
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Недійсний токен' });
+    console.error('JWT Verification Error:', error.message);
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token has expired. Please log in again.' });
+    }
+    
+    return res.status(401).json({ message: 'Invalid token.' });
   }
 };
+
+module.exports = authMiddleware;

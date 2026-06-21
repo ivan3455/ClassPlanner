@@ -12,17 +12,24 @@ const Schedule = sequelize.define('Schedule', {
     allowNull: false,
   },
   timeSlot: {
-    type: DataTypes.STRING, // Наприклад, "08:30 - 10:00"
-    allowNull: false,
+    type: DataTypes.STRING, 
+    allowNull: false, // Matches orderNumber or time sequence from TimeSettings
   },
   type: {
     type: DataTypes.ENUM('Lecture', 'Practice', 'Laboratory'),
     defaultValue: 'Lecture',
   },
+  weekType: {
+    type: DataTypes.ENUM('EveryWeek', 'EvenWeek', 'OddWeek'),
+    defaultValue: 'EveryWeek',
+    allowNull: false,
+  },
   isOnline: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   }
+}, {
+  timestamps: true,
 });
 
 module.exports = Schedule;

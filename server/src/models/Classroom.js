@@ -10,21 +10,46 @@ const Classroom = sequelize.define('Classroom', {
   number: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true, // Наприклад, "409" або "Ауд. 12"
   },
   capacity: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    validate: { min: 1 }
+    validate: { min: 1 },
   },
   type: {
-    type: DataTypes.ENUM('Lecture', 'Laboratory', 'Gym', 'Computer Class'),
-    defaultValue: 'Lecture',
+    type: DataTypes.ENUM('Lecture', 'Laboratory', 'Gym', 'Computer Class', 'General'),
+    defaultValue: 'General',
   },
   building: {
-    type: DataTypes.STRING, // Корпус
+    type: DataTypes.STRING,
     allowNull: true,
+  },
+  shortName: { 
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  isAvailable: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+  // Архітектурний зв'язок з конкретною ізольованою версією розкладу
+  ScheduleVersionId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'ScheduleVersions',
+      key: 'id'
+    },
+    onDelete: 'CASCADE'
   }
+}, {
+  timestamps: false,
+  indexes: [
+    {
+      unique: true,
+      fields: ['number', 'ScheduleVersionId']
+    }
+  ]
 });
 
 module.exports = Classroom;

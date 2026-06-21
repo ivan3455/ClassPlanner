@@ -4,14 +4,15 @@ const subjectController = require('../controllers/subjectController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
-// Створювати дисципліни можуть тільки Адмін та Методист
-router.post('/', 
-  authMiddleware, 
-  roleMiddleware(['Admin', 'Methodist']), 
-  subjectController.createSubject
-);
+// Globally enforce authentication for all academic subject endpoints
+router.use(authMiddleware);
 
-// Переглядати можуть всі авторизовані користувачі
-router.get('/', authMiddleware, subjectController.getAllSubjects);
+// Subject configuration mutations (Restricted to Methodist only)
+router.post('/', roleMiddleware(['Methodist']), subjectController.createSubject);
+router.put('/:id', roleMiddleware(['Methodist']), subjectController.updateSubject);
+router.delete('/:id', roleMiddleware(['Methodist']), subjectController.deleteSubject);
+
+// Read-only endpoint (Accessible by both Methodist and Teachers for reference)
+router.get('/', roleMiddleware(['Methodist', 'Teacher']), subjectController.getAllSubjects);
 
 module.exports = router;

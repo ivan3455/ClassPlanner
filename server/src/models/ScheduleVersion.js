@@ -9,16 +9,50 @@ const ScheduleVersion = sequelize.define('ScheduleVersion', {
   },
   name: {
     type: DataTypes.STRING,
-    allowNull: false, // Наприклад, "Семестр 1 - Чернетка"
+    allowNull: false,
+  },
+  InstitutionId: { 
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'Institutions',
+      key: 'id',
+    }
+  },
+  academicYear: { 
+    type: DataTypes.STRING,
+    allowNull: true, // Наприклад, "2025/2026"
+  },
+  daysPerWeek: { 
+    type: DataTypes.INTEGER,
+    defaultValue: 5,
+    validate: { 
+      min: 1, 
+      max: 7 
+    }
+  },
+  weekendDays: { 
+    type: DataTypes.STRING,
+    defaultValue: "Sunday",
+  },
+  allowSubgroups: { 
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  allowElectiveSimultaneity: { 
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  allowWindows: { 
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
   },
   isActive: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false, // Тільки одна версія може бути активною (публічною)
-  },
-  description: {
-    type: DataTypes.TEXT,
-    allowNull: true,
+    defaultValue: false,
   }
+}, {
+  timestamps: true,
 });
 
 module.exports = ScheduleVersion;

@@ -1,55 +1,40 @@
-const User = require('../models/User');
+const { User, Institution } = require('../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-exports.register = async (req, res) => {
-  try {
-    const { fullName, email, password, role } = req.body;
-
-    // 1. Перевірка, чи користувач вже існує
-    const candidate = await User.findOne({ where: { email } });
-    if (candidate) {
-      return res.status(400).json({ message: 'Користувач з таким email вже існує' });
-    }
-
-    // 2. Хешування пароля
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // 3. Створення користувача
-    const newUser = await User.create({
-      fullName,
-      email,
-      password: hashedPassword,
-      role
-    });
-
-    res.status(201).json({ message: 'Користувача створено успішно', userId: newUser.id });
-  } catch (error) {
-    res.status(500).json({ message: 'Помилка при реєстрації', error: error.message });
-  }
-};
-
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
-    // 1. Пошук користувача
-    const user = await User.findOne({ where: { email } });
+    const user = await User.scope('withPassword').findOne({ 
+  where: { email },
+  include: [{ model: Institution, attributes: ['type', 'name'] }]
+});
     if (!user) {
-      return res.status(404).json({ message: 'Користувача не знайдено' });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // 2. Перевірка пароля
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'User account is deactivated' });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Невірний пароль' });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // 3. Створення токена (дійсний 24 години)
+    // SESSION LIFECYCLE STRATEGY:
+    // 30 days expiry if "Remember Me" is checked, otherwise 2 hours
+    const tokenExpiry = rememberMe ? '30d' : '2h';
+
     const token = jwt.sign(
-      { userId: user.id, role: user.role },
+      { 
+        id: user.id, 
+        role: user.role,
+        InstitutionId: user.InstitutionId 
+      },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: tokenExpiry }
     );
 
     res.json({
@@ -57,10 +42,42 @@ exports.login = async (req, res) => {
       user: {
         id: user.id,
         fullName: user.fullName,
-        role: user.role
+        role: user.role,
+        InstitutionId: user.InstitutionId,
+        Institution: user.Institution
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Помилка при вході', error: error.message });
+    console.error('Login Error:', error.message);
+    res.status(500).json({ message: 'Server error during login', error: error.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id; // Retreived directly from authMiddleware token payload
+
+    // Fetch user with password scope to verify old credentials
+    const user = await User.scope('withPassword').findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect old password' });
+    }
+
+    // Hash the new password before storing
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change Password Error:', error.message);
+    res.status(500).json({ message: 'Server error during password update' });
   }
 };

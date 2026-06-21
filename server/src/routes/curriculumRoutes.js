@@ -4,17 +4,16 @@ const curriculumController = require('../controllers/curriculumController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
-// Створити запис у плані
-router.post('/', 
-  authMiddleware, 
-  roleMiddleware(['Admin', 'Methodist']), 
-  curriculumController.createCurriculum
-);
+// Base authentication required for all curriculum actions
+router.use(authMiddleware);
 
-// Отримати всі плани
-router.get('/', authMiddleware, curriculumController.getAllCurriculums);
+// Coordinator-only configuration endpoints
+router.post('/', roleMiddleware(['Methodist']), curriculumController.createCurriculum);
+router.put('/:id', roleMiddleware(['Methodist']), curriculumController.updateCurriculum);
+router.delete('/:id', roleMiddleware(['Methodist']), curriculumController.deleteCurriculum);
+router.get('/', roleMiddleware(['Methodist']), curriculumController.getAllCurriculums);
 
-// Отримати план конкретної групи
-router.get('/group/:groupId', authMiddleware, curriculumController.getGroupCurriculum);
+// Shared endpoints (Accessible by both Methodist and Teachers for reference)
+router.get('/group/:groupId', roleMiddleware(['Methodist', 'Teacher']), curriculumController.getGroupCurriculum);
 
 module.exports = router;

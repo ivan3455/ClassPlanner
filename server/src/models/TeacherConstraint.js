@@ -12,12 +12,23 @@ const TeacherConstraint = sequelize.define('TeacherConstraint', {
     allowNull: false,
   },
   startTime: {
-    type: DataTypes.TIME, // Наприклад, "08:30"
+    type: DataTypes.STRING, // Changed to STRING for consistency with TimeSettings
     allowNull: false,
   },
   endTime: {
-    type: DataTypes.TIME, // Наприклад, "18:00"
+    type: DataTypes.STRING, // Changed to STRING for sophistication of schedule calculations
     allowNull: false,
+  }
+}, {
+  timestamps: false,
+  // Model-wide validation to ensure chronological integrity
+  validate: {
+    chronologicalOrder() {
+      // Direct string comparison works perfectly for standard HH:MM formats
+      if (this.startTime >= this.endTime) {
+        throw new Error('endTime must be strictly after startTime');
+      }
+    }
   }
 });
 

@@ -1,101 +1,72 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cron = require('node-cron'); // CRITICAL WORKER DEPENDENCY INJECTED
 
-const { connectDB, sequelize } = require('./config/db');
-const User = require('./models/User'); // Імпортуємо модель, щоб Sequelize її побачив
-const Subject = require('./models/Subject');
-const Classroom = require('./models/Classroom');
-const Group = require('./models/Group');
-const Schedule = require('./models/Schedule');
-const ScheduleVersion = require('./models/ScheduleVersion');
-const BlockedSlot = require('./models/BlockedSlot');
-const TeacherConstraint = require('./models/TeacherConstraint');
-const Curriculum = require('./models/Curriculum');
-
-Schedule.belongsTo(ScheduleVersion);
-ScheduleVersion.hasMany(Schedule, { onDelete: 'CASCADE' });
-
-// Налаштування зв'язків
-// 1. Запис розкладу належить групі
-Schedule.belongsTo(Group);
-Group.hasMany(Schedule);
-
-// 2. Запис розкладу належить предмету
-Schedule.belongsTo(Subject);
-Subject.hasMany(Schedule);
-
-// 3. Запис розкладу належить аудиторії
-Schedule.belongsTo(Classroom);
-Classroom.hasMany(Schedule);
-
-// 4. Запис розкладу належить викладачу (User з роллю Teacher)
-Schedule.belongsTo(User, { as: 'Teacher', foreignKey: 'TeacherId' });
-User.hasMany(Schedule, { foreignKey: 'TeacherId' });
-
-User.hasMany(TeacherConstraint, { foreignKey: 'TeacherId' });
-TeacherConstraint.belongsTo(User, { foreignKey: 'TeacherId', as: 'Teacher' });
-
-Curriculum.belongsTo(Group);
-Group.hasMany(Curriculum);
-
-Curriculum.belongsTo(Subject);
-Subject.hasMany(Curriculum);
-
-// Також можемо прив'язати рекомендованого викладача (опціонально)
-Curriculum.belongsTo(User, { as: 'RecommendedTeacher', foreignKey: 'TeacherId' });
+const { connectDB } = require('./config/db');
+const db = require('./models');
+const superAdminController = require('./controllers/superAdminController'); // Import controller context safely
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const authRoutes = require('./routes/authRoutes');
-const subjectRoutes = require('./routes/subjectRoutes');
-const classroomRoutes = require('./routes/classroomRoutes');
-const groupRoutes = require('./routes/groupRoutes');
-const scheduleRoutes = require('./routes/scheduleRoutes');
-const versionRoutes = require('./routes/versionRoutes');
-const blockSlotRoutes = require('./routes/blockedSlotRoutes');
-const teacherConstraintRoutes = require('./routes/teacherConstraintRoutes');
-const curriculumRoutes = require('./routes/curriculumRoutes');
-
+// --- GLOBAL MIDDLEWARES ---
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/subjects', subjectRoutes);
-app.use('/api/classrooms', classroomRoutes);
-app.use('/api/groups', groupRoutes);
-app.use('/api/schedule', scheduleRoutes);
-app.use('/api/versions', versionRoutes);
-app.use('/api/blocked-slots', blockSlotRoutes);
-app.use('/api/teacher-constraints', teacherConstraintRoutes);
-app.use('/api/curriculum', curriculumRoutes);
+// --- ROUTES CONFIGURATION ---
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/public', require('./routes/publicRoutes'));
+app.use('/api/superadmin', require('./routes/superAdminRoutes'));
+app.use('/api/methodist', require('./routes/methodistRoutes'));
+app.use('/api/teachers', require('./routes/teacherRoutes'));
+app.use('/api/groups', require('./routes/groupRoutes'));
+app.use('/api/classrooms', require('./routes/classroomRoutes'));
+app.use('/api/subjects', require('./routes/subjectRoutes'));
+app.use('/api/curriculum', require('./routes/curriculumRoutes'));
+app.use('/api/versions', require('./routes/versionRoutes'));
+app.use('/api/time-settings', require('./routes/timeSettingsRoutes'));
+app.use('/api/blocked-slots', require('./routes/blockedSlotRoutes'));
+app.use('/api/teacher-constraints', require('./routes/teacherConstraintRoutes'));
+app.use('/api/generator', require('./routes/generatorRoutes'));
+app.use('/api/schedule', require('./routes/scheduleRoutes'));
 
-connectDB();
-
+// Base Health Check Endpoint
 app.get('/', (req, res) => {
-  res.send('Система планування розкладу працює!');
+  res.send('Schedule Optimization System API is running...');
 });
 
-app.listen(PORT, () => {
-  console.log(`Сервер запущено на порту ${PORT}`);
+// --- GLOBAL ERROR HANDLING MIDDLEWARE ---
+app.use((err, req, res, next) => {
+  console.error('Unhandled Server Error:', err.message);
+  res.status(500).json({ message: 'Internal server error occurred', error: err.message });
 });
 
+// --- CRON WORKER AUTOMATION MATRIX ---
+// Task schedule string: '0 * * * *' executes precisely at minute 0 of every single hour
+cron.schedule('0 * * * *', async () => {
+  console.log('[Automated Task Framework]: Initiating scheduled check for expired multi-tenant resources...');
+  await superAdminController.purgeExpiredInstitutions();
+});
+
+// --- SERVER INITIALIZATION ---
 const startServer = async () => {
   try {
-    // Підключення до БД
+    // 1. Establish database connection link
     await connectDB();
 
-    // Синхронізація моделей з БД
-    // { alter: true } оновить таблицю, якщо ти додаси нові поля пізніше
-    await sequelize.sync({ alter: true });
-    console.log('✅ Таблиці в базі даних синхронізовано.');
+    // 2. Database schema synchronization
+    const syncOptions = process.env.NODE_ENV === 'production' ? {} : { alter: true };
+    await db.sequelize.sync(syncOptions);
+    console.log('Database synchronized successfully with multi-tenant layers.');
 
+    // 3. Fire up the Express HTTP engine
     app.listen(PORT, () => {
-      console.log(`🚀 Сервер запущено на порту ${PORT}`);
+      console.log(`Express HTTP server successfully running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);
     });
   } catch (error) {
-    console.error('❌ Помилка при запуску сервера:', error);
+    console.error('Critical error during server startup sequence:', error);
+    process.exit(1);
   }
 };
 

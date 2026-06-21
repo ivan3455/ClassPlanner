@@ -4,14 +4,13 @@ const classroomController = require('../controllers/classroomController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
-// Створення - тільки Адмін/Методист
-router.post('/', 
-  authMiddleware, 
-  roleMiddleware(['Admin', 'Methodist']), 
-  classroomController.createClassroom
-);
+// Globally secure classroom routes for school/university coordinators
+router.use(authMiddleware, roleMiddleware(['Methodist']));
 
-// Перегляд - всі авторизовані
-router.get('/', authMiddleware, classroomController.getAllClassrooms);
+// Classroom CRUD endpoints
+router.get('/', classroomController.getAllClassrooms);
+router.post('/', classroomController.createClassroom);
+router.put('/:id', classroomController.updateClassroom);
+router.delete('/:id', classroomController.deleteClassroom);
 
 module.exports = router;

@@ -1,0 +1,179 @@
+==================================================
+TIMESTAMP:       2026-05-26T20:14:57.995Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 50 (Lesson Cards)
+EXECUTION TIME:  0.135 seconds
+AVERAGE CPU:     46.7%
+PEAK RAM USAGE:  3.40 MB
+STATUS:          SUCCESS
+==================================================
+
+==================================================
+TIMESTAMP:       2026-05-26T20:37:18.943Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 149 (Lesson Cards)
+EXECUTION TIME:  0.194 seconds
+AVERAGE CPU:     72.6%
+PEAK RAM USAGE:  7.56 MB
+STATUS:          SUCCESS
+==================================================
+
+==================================================
+TIMESTAMP:       2026-05-26T20:46:17.174Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 149 (Lesson Cards)
+EXECUTION TIME:  0.164 seconds
+AVERAGE CPU:     85.9%
+PEAK RAM USAGE:  7.82 MB
+STATUS:          SUCCESS
+==================================================
+
+==================================================
+TIMESTAMP:       2026-05-26T20:50:27.085Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 197 (Lesson Cards)
+EXECUTION TIME:  0.173 seconds
+AVERAGE CPU:     108.7%
+PEAK RAM USAGE:  2.70 MB
+STATUS:          SUCCESS
+==================================================
+
+==================================================
+TIMESTAMP:       2026-05-26T20:54:03.145Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 250 (Lesson Cards)
+EXECUTION TIME:  0.185 seconds
+AVERAGE CPU:     135.4%
+PEAK RAM USAGE:  4.68 MB
+STATUS:          SUCCESS
+==================================================
+
+==================================================
+TIMESTAMP:       2026-05-26T20:56:31.169Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 50 (Lesson Cards)
+EXECUTION TIME:  0.119 seconds
+AVERAGE CPU:     26.0%
+PEAK RAM USAGE:  3.84 MB
+STATUS:          SUCCESS
+==================================================
+
+==================================================
+TIMESTAMP:       2026-05-26T20:56:47.235Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 100 (Lesson Cards)
+EXECUTION TIME:  0.129 seconds
+AVERAGE CPU:     109.6%
+PEAK RAM USAGE:  6.09 MB
+STATUS:          SUCCESS
+==================================================
+
+==================================================
+TIMESTAMP:       2026-05-26T20:57:10.070Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 150 (Lesson Cards)
+EXECUTION TIME:  0.145 seconds
+AVERAGE CPU:     118.9%
+PEAK RAM USAGE:  2.15 MB
+STATUS:          SUCCESS
+==================================================
+
+==================================================
+TIMESTAMP:       2026-05-26T20:57:18.397Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 200 (Lesson Cards)
+EXECUTION TIME:  0.155 seconds
+AVERAGE CPU:     150.7%
+PEAK RAM USAGE:  3.02 MB
+STATUS:          SUCCESS
+==================================================
+
+==================================================
+TIMESTAMP:       2026-05-26T20:58:12.173Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 250 (Lesson Cards)
+EXECUTION TIME:  0.181 seconds
+AVERAGE CPU:     111.9%
+PEAK RAM USAGE:  4.71 MB
+STATUS:          SUCCESS
+==================================================
+==================================================
+TIMESTAMP:       2026-06-15T12:12:01.279Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 50 (Lesson Cards)
+EXECUTION TIME:  0.274 seconds
+AVERAGE CPU:     40.1%
+PEAK RAM USAGE:  4.48 MB
+STATUS:          SUCCESS_PHASE_1_STOCHASTIC
+==================================================
+
+==================================================
+TIMESTAMP:       2026-06-21T15:48:19.654Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 50 (Lesson Cards)
+EXECUTION TIME:  0.157 seconds
+AVERAGE CPU:     49.7%
+PEAK RAM USAGE:  4.46 MB
+STATUS:          SUCCESS_PHASE_1_STOCHASTIC
+==================================================
+
+==================================================
+TIMESTAMP:       2026-06-21T16:15:48.295Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 250 (Lesson Cards)
+EXECUTION TIME:  9.504 seconds
+AVERAGE CPU:     103.3%
+PEAK RAM USAGE:  21.94 MB
+STATUS:          FAILED: EXECUTION TIMEOUT DUE TO TIGHT CONSTRAINT GRID.
+==================================================
+
+==================================================
+TIMESTAMP:       2026-06-21T16:16:02.674Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 50 (Lesson Cards)
+EXECUTION TIME:  0.132 seconds
+AVERAGE CPU:     59.3%
+PEAK RAM USAGE:  4.46 MB
+STATUS:          SUCCESS_PHASE_1_STOCHASTIC
+==================================================
+
+==================================================
+TIMESTAMP:       2026-06-21T16:41:00.527Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 50 (Lesson Cards)
+EXECUTION TIME:  0.287 seconds
+AVERAGE CPU:     65.2%
+PEAK RAM USAGE:  4.51 MB
+STATUS:          SUCCESS_PHASE_1_STOCHASTIC
+==================================================
+
+==================================================
+TIMESTAMP:       2026-06-21T16:44:07.687Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 50 (Lesson Cards)
+EXECUTION TIME:  0.237 seconds
+AVERAGE CPU:     66.2%
+PEAK RAM USAGE:  4.50 MB
+STATUS:          SUCCESS_PHASE_1_STOCHASTIC
+==================================================
+
+==================================================
+TIMESTAMP:       2026-06-21T16:50:23.614Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 50 (Lesson Cards)
+EXECUTION TIME:  0.310 seconds
+AVERAGE CPU:     55.6%
+PEAK RAM USAGE:  4.54 MB
+STATUS:          SUCCESS_PHASE_1_STOCHASTIC
+==================================================
+
+==================================================
+TIMESTAMP:       2026-06-21T17:01:28.825Z
+INSTITUTION ID:  ac25e25c-6d69-4489-9154-16840becc3ac
+TOTAL VARIABLES: 50 (Lesson Cards)
+EXECUTION TIME:  0.262 seconds
+AVERAGE CPU:     59.5%
+PEAK RAM USAGE:  4.47 MB
+STATUS:          SUCCESS_PHASE_1_STOCHASTIC
+==================================================
+
